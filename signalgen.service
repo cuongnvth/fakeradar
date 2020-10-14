@@ -1,0 +1,11 @@
+[Unit]
+Description=SignalGen
+
+[Service]
+Type=simple
+WorkingDirectory=/home/pi/signalgen/
+ExecStart=python /home/pi/signalgen/signalgen.py
+Restart=alway
+
+[Install]
+WantedBy=multi-user.target
