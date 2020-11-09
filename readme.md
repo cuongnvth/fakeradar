@@ -6,4 +6,4 @@ Huong dan
 + sudo setup.py install
 
 2. Chay chuong trinh
-python signalgen.py
++ python signalgen.py
