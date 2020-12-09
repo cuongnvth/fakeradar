@@ -7,3 +7,9 @@ Huong dan
 
 2. Chay chuong trinh
 + python signalgen.py
+
+3. Tao khoi dong cung Raspi
++ nano .bashrc
++ Add end file
+cd fakeradar
+python signalgen.py
