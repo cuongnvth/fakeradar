@@ -1,5 +1,5 @@
 {
-    "startfreq": 1600000000,
+    "startfreq": 3900000000,
     "stepfreq": 100000000,
-    "stopfreq": 1800000000
+    "stopfreq": 4200000000
 }

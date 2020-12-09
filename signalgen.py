@@ -1,6 +1,7 @@
 from gnuradio import blocks
 from gnuradio import eng_notation
 from gnuradio import gr
+from gnuradio import uhd
 from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from optparse import OptionParser
@@ -33,7 +34,8 @@ GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 serial = i2c(port=1, address=0x3C) #thiet lap dia chi man hinh
-device = sh1106(serial, rotate=0) #loai nan hinh
+# device = sh1106(serial, rotate=0) #loai nan hinh
+device = ssd1306(serial, rotate=0) #loai nan hinh
 device.width=128
 device.height=64
 
@@ -49,31 +51,50 @@ class SignalGen(gr.top_block):
         # Variables
         ##################################################
         self.samp_rate = samp_rate = 1e6
-        self.freq = freq = 4e9
+        self.freq = freq = 3e9
+        self.gain = gain = 70
         self.pathfile = pathfile = 'data/1.KP1'
 
         ##################################################
         # Blocks
         ##################################################
-        self.osmosdr_sink_0 = osmosdr.sink( args="numchan=" + str(1) + " " + '' )
-        self.osmosdr_sink_0.set_sample_rate(samp_rate)
-        self.osmosdr_sink_0.set_center_freq(freq, 0)
-        self.osmosdr_sink_0.set_freq_corr(0, 0)
-        #USRP b210
-        self.osmosdr_sink_0.set_gain(73, 0)   #gain >74 sinh hai
-        self.osmosdr_sink_0.set_if_gain(0, 0)
-        self.osmosdr_sink_0.set_bb_gain(0, 0)
-        #Hackrf
-        # self.osmosdr_sink_0.set_gain(0, 0)
-        # self.osmosdr_sink_0.set_if_gain(0, 0)
-        # self.osmosdr_sink_0.set_bb_gain(47, 0)
-        self.osmosdr_sink_0.set_antenna('0', 0)
-        self.osmosdr_sink_0.set_bandwidth(1e6, 0)
-
+        # Using uhd
+        self.uhd_usrp_sink = uhd.usrp_sink(
+        	",".join(("", "")),
+        	uhd.stream_args(
+        		cpu_format="fc32",
+        		channels=range(1),
+        	),
+        )
+        self.uhd_usrp_sink.set_samp_rate(samp_rate)
+        self.uhd_usrp_sink.set_center_freq(freq, 0)
+        self.uhd_usrp_sink.set_gain(gain, 0)
+        self.uhd_usrp_sink.set_antenna('TX/RX', 0)
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
         self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, pathfile, True)
         self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
         self.blocks_char_to_float_0 = blocks.char_to_float(1, 1)
+
+        # Using gr-osmosdr
+        # self.osmosdr_sink_0 = osmosdr.sink( args="numchan=" + str(1) + " " + '' )
+        # self.osmosdr_sink_0.set_sample_rate(samp_rate)
+        # self.osmosdr_sink_0.set_center_freq(freq, 0)
+        # self.osmosdr_sink_0.set_freq_corr(0, 0)
+        # #USRP b210
+        # self.osmosdr_sink_0.set_gain(73, 0)   #gain >74 sinh hai
+        # self.osmosdr_sink_0.set_if_gain(0, 0)
+        # self.osmosdr_sink_0.set_bb_gain(0, 0)
+        # #Hackrf
+        # # self.osmosdr_sink_0.set_gain(0, 0)
+        # # self.osmosdr_sink_0.set_if_gain(0, 0)
+        # # self.osmosdr_sink_0.set_bb_gain(47, 0)
+        # self.osmosdr_sink_0.set_antenna('0', 0)
+        # self.osmosdr_sink_0.set_bandwidth(1e6, 0)
+
+        # self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
+        # self.blocks_file_source_0 = blocks.file_source(gr.sizeof_char*1, pathfile, True)
+        # self.blocks_file_source_0.set_begin_tag(pmt.PMT_NIL)
+        # self.blocks_char_to_float_0 = blocks.char_to_float(1, 1)
 
 
 
@@ -82,21 +103,39 @@ class SignalGen(gr.top_block):
         ##################################################
         self.connect((self.blocks_char_to_float_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.blocks_file_source_0, 0), (self.blocks_char_to_float_0, 0))
-        self.connect((self.blocks_float_to_complex_0, 0), (self.osmosdr_sink_0, 0))
+        # Using uhd
+        self.connect((self.blocks_float_to_complex_0, 0), (self.uhd_usrp_sink, 0))
+        # Using gr-osmosdr
+        # self.connect((self.blocks_float_to_complex_0, 0), (self.osmosdr_sink_0, 0))
+        
 
     def get_samp_rate(self):
         return self.samp_rate
 
     def set_samp_rate(self, samp_rate):
         self.samp_rate = samp_rate
-        self.osmosdr_sink_0.set_sample_rate(self.samp_rate)
+        # Using uhd
+        self.uhd_usrp_sink.set_samp_rate(self.samp_rate)
+        # Using gr-osmosdr
+        #self.osmosdr_sink_0.set_sample_rate(self.samp_rate)
 
     def get_freq(self):
         return self.freq
 
     def set_freq(self, freq):
         self.freq = freq
-        self.osmosdr_sink_0.set_center_freq(self.freq, 0)
+        # Using uhd
+        self.uhd_usrp_sink.set_center_freq(self.freq, 0)
+        # Using gr-osmosdr
+        #self.osmosdr_sink_0.set_center_freq(self.freq, 0)
+    
+    def get_gain(self):
+        return self.gain
+
+    def set_gain(self, gain):
+        self.gain = gain
+        self.uhd_usrp_sink.set_gain(self.gain, 0)
+        
     
     def get_filesource(self):
         return self.pathfile
@@ -113,11 +152,17 @@ try:
         print dataConfig
         frequency = dataConfig['freq']
         mode = str(dataConfig['mode'])
+        power = dataConfig['power']
 except ValueError:
     frequency = 3.9e9   
     mode = 'data/1.KP1'
+    power = 5
 # print frequency
 # print mode
+# print power
+
+
+#Cau hinh tan so
 subMenuFreq = []
 def loadfreq():
     global startFreq
@@ -142,16 +187,23 @@ def loadfreq():
         stopFreq = 4.2e9
         stepFreq = 1e8
 loadfreq()
+
+#Cau hinh cac che do
 if ((frequency < startFreq) or (frequency > stopFreq)): 
     frequency = startFreq
 print (frequency,startFreq,stepFreq)
 print (subMenuFreq)
 subMenuMode = sorted(os.listdir("data/")) #lay ten cac file che do
-mainMenu = ['Frequency:', 'Mode: ']
-mainMenuConfig = ['','']
+
+#Cau hinh cong suat
+subMenuPower = [50,55,60,65,73]
+
+#Cau hinh MainMenu
+mainMenu = ['Frequency: ', 'Mode: ','Power: ']
+mainMenuConfig = ['','','']
 mainMenuConfig[0] = mainMenu[0] + subMenuFreq[int((frequency%startFreq)/stepFreq)] #hien thi
 mainMenuConfig[1] = mainMenu[1] + mode[5:]
-
+mainMenuConfig[2] = mainMenu[2] + str(power)
 
 
 def invert(draw,x,y,text):
@@ -192,17 +244,23 @@ def menu(device, draw, menustr,index):
 def display(pathMenu):
     if pathMenu == 1:
         with canvas(device) as draw:
-            menu(device, draw, mainMenuConfig,counter%2)
+            menu(device, draw, mainMenuConfig,counter%3)
             # font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 9)
-            font = ImageFont.truetype("DejaVuSans-Bold.ttf", 16)
-            draw.text((37, 30), "Signal", font=font, fill=255)
-            draw.text((20, 45), "Generator", font=font, fill=255)
+            font = ImageFont.truetype("DejaVuSans-Bold.ttf", 12)
+            draw.text((2, 45), "Signal Generatorr", font=font, fill=255)
+            # draw.text((20, 52), "Generator", font=font, fill=255)
     elif pathMenu == 21:
         with canvas(device) as draw:
             menu(device, draw, subMenuFreq,counter%len(subMenuFreq))
     elif pathMenu == 22:
         with canvas(device) as draw:
             menu(device, draw, subMenuMode,counter%(len(subMenuMode)))
+    elif pathMenu == 23:
+        with canvas(device) as draw:
+            menu(device, draw, map(str,range(1,6)),counter%5) #Hien thi muc cong suat 1-5
+            #menu(device, draw, subMenuPower,counter%(len(subMenuPower)))
+
+print subMenuPower[power-1]
 
 def runSDR():
     tb.stop()
@@ -211,8 +269,10 @@ def runSDR():
     tb.disconnect((tb.blocks_file_source_0, 0), (tb.blocks_char_to_float_0, 0))
     tb.set_freq(frequency)
     tb.set_filesource(mode)
+    tb.set_gain(subMenuPower[power-1])
     print(tb.get_freq())
     print(tb.get_filesource())
+    print(tb.get_gain())
     tb.connect((tb.blocks_file_source_0, 0), (tb.blocks_char_to_float_0, 0))
     # tb.unlock()
     tb.start()
@@ -234,16 +294,20 @@ def sw_callback(channel):
     global stopFreq
     global stepFreq
     global subMenuFreq
+    global power
 
     if pathMenu == 1:
-        if(counter%2 == 0):
+        if(counter%3 == 0):
             loadfreq() #cap nhat tan so
             print (frequency,startFreq,stepFreq)
             print (subMenuFreq)
             pathMenu = 21
-        elif (counter%2 == 1):
+        elif (counter%3 == 1):
             subMenuMode = sorted(os.listdir("data/")) #Cap nhat che do
             pathMenu = 22
+        elif (counter%3 == 2):
+            # subMenuMode = sorted(os.listdir("data/")) #Cap nhat che do
+            pathMenu = 23
         counter = 0
         display(pathMenu)
         return # chua luu cau hinh
@@ -259,6 +323,12 @@ def sw_callback(channel):
         mainMenuConfig[1] = mainMenu[1] + str(mode)
         mode = 'data/' + mode
         pathMenu = 1
+    elif pathMenu == 23:
+        power = ''
+        mainMenuConfig[2] = ""
+        power = counter%5 + 1
+        mainMenuConfig[2] = mainMenu[2] + str(power)
+        pathMenu = 1
         
     counter = 0
     display(pathMenu)
@@ -267,11 +337,13 @@ def sw_callback(channel):
             dataConfig = json.load(f)
             dataConfig['freq'] = frequency
             dataConfig['mode'] = mode
+            dataConfig['power'] = power
             print dataConfig
     except ValueError: 
-            dataConfig ={'freq':'','mode':''}
+            dataConfig ={'freq':'','mode':'','power':''}
             dataConfig['freq'] = frequency
             dataConfig['mode'] = mode
+            dataConfig['power'] = power
     with open('conf.json', 'w') as f:
         json.dump(dataConfig, f, indent=4)
     runSDR()

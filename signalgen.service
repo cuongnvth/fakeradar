@@ -3,9 +3,10 @@ Description=SignalGen
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/signalgen/
-ExecStart=python /home/pi/signalgen/signalgen.py
-Restart=alway
+WorkingDirectory=/home/pi/fakeradar
+ExecStart=python /home/pi/fakeradar/signalgen.py
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
+

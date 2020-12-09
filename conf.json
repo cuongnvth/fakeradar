@@ -1,4 +1,5 @@
 {
-    "freq": 1700000000, 
-    "mode": "data/7.AP1"
+    "freq": 4000000000, 
+    "mode": "data/2.KP1+", 
+    "power": 4
 }
