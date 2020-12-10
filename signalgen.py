@@ -24,15 +24,18 @@ import json
 clk = 17
 dt = 18
 sw = 27
+rf_control = 22
 pathMenu = 1
 counter = 0
-
+power_gain = 0
 
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(clk, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(rf_control, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
 serial = i2c(port=1, address=0x3C) #thiet lap dia chi man hinh
 # device = sh1106(serial, rotate=0) #loai nan hinh
 device = ssd1306(serial, rotate=0) #loai nan hinh
@@ -262,14 +265,15 @@ def display(pathMenu):
 
 print subMenuPower[power-1]
 
-def runSDR():
+def runSDR(power_gain):
     tb.stop()
     tb.wait()
     # tb.lock()
     tb.disconnect((tb.blocks_file_source_0, 0), (tb.blocks_char_to_float_0, 0))
     tb.set_freq(frequency)
     tb.set_filesource(mode)
-    tb.set_gain(subMenuPower[power-1])
+    # tb.set_gain(subMenuPower[power-1])
+    tb.set_gain(power_gain)
     print(tb.get_freq())
     print(tb.get_filesource())
     print(tb.get_gain())
@@ -277,10 +281,17 @@ def runSDR():
     # tb.unlock()
     tb.start()
 
+def rfControl(channel):
+    time.sleep(0.5)
+    if GPIO.input(22) == 0:
+        runSDR(subMenuPower[power-1])
+    elif  GPIO.input(22) == 1:
+        runSDR(0)
 
 display(pathMenu)
 tb = SignalGen()
-runSDR()
+rfControl(22)
+
 
 def sw_callback(channel):  
     global pathMenu
@@ -295,7 +306,7 @@ def sw_callback(channel):
     global stepFreq
     global subMenuFreq
     global power
-
+    
     if pathMenu == 1:
         if(counter%3 == 0):
             loadfreq() #cap nhat tan so
@@ -316,6 +327,7 @@ def sw_callback(channel):
         mainMenuConfig[0] = ''
         mainMenuConfig[0] = mainMenu[0] + subMenuFreq[counter%len(subMenuFreq)]
         pathMenu = 1
+        counter = 1
     elif pathMenu == 22:
         mode = ''
         mainMenuConfig[1] = ""
@@ -323,14 +335,15 @@ def sw_callback(channel):
         mainMenuConfig[1] = mainMenu[1] + str(mode)
         mode = 'data/' + mode
         pathMenu = 1
+        counter = 2
     elif pathMenu == 23:
         power = ''
         mainMenuConfig[2] = ""
         power = counter%5 + 1
         mainMenuConfig[2] = mainMenu[2] + str(power)
         pathMenu = 1
+        counter = 0
         
-    counter = 0
     display(pathMenu)
     try:
         with open('conf.json', 'r') as f:
@@ -346,7 +359,7 @@ def sw_callback(channel):
             dataConfig['power'] = power
     with open('conf.json', 'w') as f:
         json.dump(dataConfig, f, indent=4)
-    runSDR()
+    rfControl(22)
 
 
 
@@ -361,6 +374,7 @@ def rotary_callback(channel):
                         counter += 1
                 else:
                         counter -= 1
+                # time.sleep(0.2)
                 # print counter
                 display(pathMenu)
         # clkLastState = clkState
@@ -370,8 +384,10 @@ def rotary_callback(channel):
 
 counter = 0
 clkLastState = GPIO.input(clk)
-GPIO.add_event_detect(clk, GPIO.FALLING , callback=rotary_callback, bouncetime=100)  
-GPIO.add_event_detect(sw, GPIO.FALLING , callback=sw_callback, bouncetime=300)
+GPIO.add_event_detect(clk, GPIO.FALLING , callback=rotary_callback,bouncetime=200)  
+GPIO.add_event_detect(sw, GPIO.FALLING , callback=sw_callback, bouncetime=1000)
+GPIO.add_event_detect(rf_control, GPIO.BOTH , callback=rfControl, bouncetime=300)
+
 try:
     raw_input('Press Enter to quit: ')
 except EOFError:
