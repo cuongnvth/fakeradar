@@ -206,7 +206,8 @@ mainMenu = ['Frequency: ', 'Mode: ','Power: ']
 mainMenuConfig = ['','','']
 mainMenuConfig[0] = mainMenu[0] + subMenuFreq[int((frequency%startFreq)/stepFreq)] #hien thi
 mainMenuConfig[1] = mainMenu[1] + mode[5:]
-mainMenuConfig[2] = mainMenu[2] + str(power)
+#mainMenuConfig[2] = mainMenu[2] + str(power) #Hien thi cong suat theo muc
+mainMenuConfig[2] = mainMenu[2] + str(power*20) + 'W' # Hien thi cong suat theo W
 
 
 def invert(draw,x,y,text):
@@ -260,7 +261,8 @@ def display(pathMenu):
             menu(device, draw, subMenuMode,counter%(len(subMenuMode)))
     elif pathMenu == 23:
         with canvas(device) as draw:
-            menu(device, draw, map(str,range(1,6)),counter%5) #Hien thi muc cong suat 1-5
+            #menu(device, draw, map(str,range(1,6)),counter%5) #Hien thi muc cong suat 1-5
+            menu(device, draw, map(str,range(20,120,20)),counter%5) #Hien thi cong suat theo W
             #menu(device, draw, subMenuPower,counter%(len(subMenuPower)))
 
 print subMenuPower[power-1]
@@ -340,7 +342,8 @@ def sw_callback(channel):
         power = ''
         mainMenuConfig[2] = ""
         power = counter%5 + 1
-        mainMenuConfig[2] = mainMenu[2] + str(power)
+        # mainMenuConfig[2] = mainMenu[2] + str(power) #Hien thi cong suat theo muc
+        mainMenuConfig[2] = mainMenu[2] + str(power*20) + 'W' #Hien thi cong suat theo W
         pathMenu = 1
         counter = 0
         
