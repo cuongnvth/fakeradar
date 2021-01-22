@@ -19,7 +19,7 @@ import socket
 import threading
 import os
 import json
-
+import serial
 
 clk = 17
 dt = 18
@@ -36,6 +36,8 @@ GPIO.setup(dt, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(sw, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(rf_control, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
+
+port = serial.Serial("/dev/serial0", baudrate=115200, timeout=3.0)#thiet lap truyen UART0
 serial = i2c(port=1, address=0x3C) #thiet lap dia chi man hinh
 # device = sh1106(serial, rotate=0) #loai nan hinh
 device = ssd1306(serial, rotate=0) #loai nan hinh
@@ -69,6 +71,7 @@ class SignalGen(gr.top_block):
         		channels=range(1),
         	),
         )
+        self.uhd_usrp_sink.set_clock_source('external', 0)
         self.uhd_usrp_sink.set_samp_rate(samp_rate)
         self.uhd_usrp_sink.set_center_freq(freq, 0)
         self.uhd_usrp_sink.set_gain(gain, 0)
@@ -158,12 +161,19 @@ try:
         power = dataConfig['power']
 except ValueError:
     frequency = 3.9e9   
-    mode = 'data/1.KP1'
+    mode = "data/1.KP1"
     power = 5
 # print frequency
 # print mode
 # print power
 
+#Gui den bo tao xung
+def sendUART(modeFile):
+    port.write('AA'.decode('hex'))
+    port.write(open(modeFile,"rb").read())
+    port.write('EE'.decode('hex'))
+
+sendUART(mode)
 
 #Cau hinh tan so
 subMenuFreq = []
@@ -206,8 +216,8 @@ mainMenu = ['Frequency: ', 'Mode: ','Power: ']
 mainMenuConfig = ['','','']
 mainMenuConfig[0] = mainMenu[0] + subMenuFreq[int((frequency%startFreq)/stepFreq)] #hien thi
 mainMenuConfig[1] = mainMenu[1] + mode[5:]
-#mainMenuConfig[2] = mainMenu[2] + str(power) #Hien thi cong suat theo muc
-mainMenuConfig[2] = mainMenu[2] + str(power*20) + 'W' # Hien thi cong suat theo W
+mainMenuConfig[2] = mainMenu[2] + str(power) #Hien thi cong suat theo muc
+# mainMenuConfig[2] = mainMenu[2] + str(power*20) + 'W' # Hien thi cong suat theo W
 
 
 def invert(draw,x,y,text):
@@ -250,8 +260,8 @@ def display(pathMenu):
         with canvas(device) as draw:
             menu(device, draw, mainMenuConfig,counter%3)
             # font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 9)
-            font = ImageFont.truetype("DejaVuSans-Bold.ttf", 12)
-            draw.text((2, 45), "Signal Generatorr", font=font, fill=255)
+            font = ImageFont.truetype("DejaVuSans-Bold.ttf", 14)
+            draw.text((40, 45), "96L6E", font=font, fill=255)
             # draw.text((20, 52), "Generator", font=font, fill=255)
     elif pathMenu == 21:
         with canvas(device) as draw:
@@ -261,9 +271,8 @@ def display(pathMenu):
             menu(device, draw, subMenuMode,counter%(len(subMenuMode)))
     elif pathMenu == 23:
         with canvas(device) as draw:
-            #menu(device, draw, map(str,range(1,6)),counter%5) #Hien thi muc cong suat 1-5
-            menu(device, draw, map(str,range(20,120,20)),counter%5) #Hien thi cong suat theo W
-            #menu(device, draw, subMenuPower,counter%(len(subMenuPower)))
+            menu(device, draw, map(str,range(1,6)),counter%5) #Hien thi muc cong suat 1-5
+            # menu(device, draw, map(str,range(20,120,20)),counter%5) #Hien thi cong suat theo W
 
 print subMenuPower[power-1]
 
@@ -295,6 +304,8 @@ tb = SignalGen()
 rfControl(22)
 
 
+
+
 def sw_callback(channel):  
     global pathMenu
     global counter
@@ -308,6 +319,7 @@ def sw_callback(channel):
     global stepFreq
     global subMenuFreq
     global power
+    global modeString
     
     if pathMenu == 1:
         if(counter%3 == 0):
@@ -342,8 +354,8 @@ def sw_callback(channel):
         power = ''
         mainMenuConfig[2] = ""
         power = counter%5 + 1
-        # mainMenuConfig[2] = mainMenu[2] + str(power) #Hien thi cong suat theo muc
-        mainMenuConfig[2] = mainMenu[2] + str(power*20) + 'W' #Hien thi cong suat theo W
+        mainMenuConfig[2] = mainMenu[2] + str(power) #Hien thi cong suat theo muc
+        # mainMenuConfig[2] = mainMenu[2] + str(power*20) + 'W' #Hien thi cong suat theo W
         pathMenu = 1
         counter = 0
         
@@ -362,6 +374,7 @@ def sw_callback(channel):
             dataConfig['power'] = power
     with open('conf.json', 'w') as f:
         json.dump(dataConfig, f, indent=4)
+    sendUART(mode)
     rfControl(22)
 
 
