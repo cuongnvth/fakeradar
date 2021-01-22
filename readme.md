@@ -14,3 +14,7 @@ Huong dan
 Add end file
 + cd fakeradar
 + python signalgen.py
+
+4. Cau hinh truyen UART0 cho Rasp4
++ sudo systemctl mask serial-getty@ttyAMA0.service
++ Xoa console=serial0,115200 trong file /boot/cmdline.txt
