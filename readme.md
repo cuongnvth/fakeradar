@@ -1,7 +1,7 @@
 Huong dan
 0. Cai cac thu vien phu thuoc
-+ gnuraio
-+ vsftp
++ gnuradio
++ vsftp tai https://docs.google.com/document/d/1I5rZl4iO-pzb8lEGtGxOEf01My18t763Lo7kyMiaRro/edit
 + thiet lap I2C, SSH, Serial
 2. Cai thu vien cho oled sh1106 1.3"
 + git clone https://github.com/rm-hull/luma.oled
