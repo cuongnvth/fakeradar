@@ -2,6 +2,7 @@
 Description=SignalGen
 
 [Service]
+User=pi
 Type=simple
 WorkingDirectory=/home/pi/fakeradar
 ExecStart=python /home/pi/fakeradar/signalgen.py
