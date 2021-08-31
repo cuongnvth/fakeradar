@@ -1,5 +1,9 @@
 Huong dan
-1. Cai thu vien cho oled sh1106 1.3"
+0. Cai cac thu vien phu thuoc
++ gnuraio
++ vsftp
++ thiet lap I2C, SSH, Serial
+2. Cai thu vien cho oled sh1106 1.3"
 + git clone https://github.com/rm-hull/luma.oled
 + cd luma.oled
 + git checkout 1.5.0 #su dung voi python 2
