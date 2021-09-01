@@ -1,7 +1,7 @@
 Huong dan
 0. Cai cac thu vien phu thuoc
-+ sudo apt-get update
-Neu loi thì chay:
++ sudo apt-get update\
+Neu loi thì chay:\
 sudo apt-get update --allow-releaseinfo-change
 + gnuradio
 + vsftp tai https://docs.google.com/document/d/1I5rZl4iO-pzb8lEGtGxOEf01My18t763Lo7kyMiaRro/edit
