@@ -5,7 +5,7 @@ from gnuradio import uhd
 from gnuradio.eng_option import eng_option
 from gnuradio.filter import firdes
 from optparse import OptionParser
-import osmosdr
+#import osmosdr
 import pmt
 import time
 from RPi import GPIO
@@ -21,8 +21,8 @@ import os
 import json
 import serial
 
-clk = 17
-dt = 18
+clk = 18
+dt = 17
 sw = 27
 rf_control = 22
 pathMenu = 1
@@ -400,8 +400,8 @@ def rotary_callback(channel):
 
 counter = 0
 clkLastState = GPIO.input(clk)
-GPIO.add_event_detect(clk, GPIO.FALLING , callback=rotary_callback,bouncetime=200)  
-GPIO.add_event_detect(sw, GPIO.FALLING , callback=sw_callback, bouncetime=1000)
+GPIO.add_event_detect(clk, GPIO.RISING , callback=rotary_callback,bouncetime=200)  
+GPIO.add_event_detect(sw, GPIO.RISING , callback=sw_callback, bouncetime=1000)
 GPIO.add_event_detect(rf_control, GPIO.BOTH , callback=rfControl, bouncetime=300)
 
 try:
