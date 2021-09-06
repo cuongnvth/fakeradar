@@ -173,7 +173,7 @@ def sendUART(modeFile):
     port.write(open(modeFile,"rb").read())
     port.write('EE'.decode('hex'))
 
-sendUART(mode)
+#sendUART(mode)
 
 #Cau hinh tan so
 subMenuFreq = []
@@ -209,7 +209,7 @@ print (subMenuFreq)
 subMenuMode = sorted(os.listdir("data/")) #lay ten cac file che do
 
 #Cau hinh cong suat
-subMenuPower = [50,55,60,65,73]
+subMenuPower = [60,63,66,69,77]
 
 #Cau hinh MainMenu
 mainMenu = ['Frequency: ', 'Mode: ','Power: ']
@@ -285,9 +285,9 @@ def runSDR(power_gain):
     tb.set_filesource(mode)
     # tb.set_gain(subMenuPower[power-1])
     tb.set_gain(power_gain)
-    print(tb.get_freq())
-    print(tb.get_filesource())
-    print(tb.get_gain())
+    print('Freq:',tb.get_freq())
+    print('Mode:',tb.get_filesource())
+    print('Gain:',tb.get_gain())
     tb.connect((tb.blocks_file_source_0, 0), (tb.blocks_char_to_float_0, 0))
     # tb.unlock()
     tb.start()
@@ -302,6 +302,7 @@ def rfControl(channel):
 display(pathMenu)
 tb = SignalGen()
 rfControl(22)
+sendUART(mode)
 
 
 
@@ -373,9 +374,9 @@ def sw_callback(channel):
             dataConfig['mode'] = mode
             dataConfig['power'] = power
     with open('conf.json', 'w') as f:
-        json.dump(dataConfig, f, indent=4)
-    sendUART(mode)
+        json.dump(dataConfig, f, indent=4)   
     rfControl(22)
+    sendUART(mode)
 
 
 
