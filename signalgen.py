@@ -209,7 +209,7 @@ print (subMenuFreq)
 subMenuMode = sorted(os.listdir("data/")) #lay ten cac file che do
 
 #Cau hinh cong suat
-subMenuPower = [60,63,66,69,77]
+subMenuPower = [60,63,66,69,77] #B210
 
 #Cau hinh MainMenu
 mainMenu = ['Frequency: ', 'Mode: ','Power: ']
